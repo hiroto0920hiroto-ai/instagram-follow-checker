@@ -1,0 +1,19 @@
+{
+  "name": "フォロバ整理室",
+  "short_name": "フォロバ",
+  "description": "Instagramデータをスマホで整理するローカル処理ツール",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4ead3",
+  "theme_color": "#08785e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

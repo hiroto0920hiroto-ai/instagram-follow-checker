@@ -1,0 +1,1235 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#08785e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="フォロバ整理室" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <title>フォロバ整理室</title>
+  <style>
+    :root {
+      --ink: #17130f;
+      --paper: #fff8e8;
+      --paper-2: #f4ead3;
+      --line: #d5c5a9;
+      --muted: #766b5d;
+      --green: #08785e;
+      --mint: #dffff0;
+      --red: #bd3b3b;
+      --blue: #245ea8;
+      --rose: #f1b5aa;
+      --yellow: #ffe08a;
+      --shadow: 0 24px 70px rgba(23, 19, 15, .18);
+      --sans: "Yu Gothic", "Meiryo", system-ui, sans-serif;
+      --serif: Georgia, "Yu Mincho", "Hiragino Mincho ProN", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at 14% 8%, rgba(241, 181, 170, .72) 0 120px, transparent 122px),
+        radial-gradient(circle at 92% 14%, rgba(8, 120, 94, .18) 0 180px, transparent 182px),
+        linear-gradient(135deg, rgba(23, 19, 15, .045) 25%, transparent 25%) 0 0 / 28px 28px,
+        var(--paper-2);
+    }
+
+    body.locked { overflow: hidden; }
+
+    button, input { font: inherit; }
+    button { touch-action: manipulation; }
+
+    .login {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        linear-gradient(120deg, rgba(23, 19, 15, .84), rgba(23, 19, 15, .68)),
+        radial-gradient(circle at 72% 28%, rgba(255, 224, 138, .38), transparent 260px);
+    }
+
+    .login.hide { display: none; }
+
+    .login-card {
+      width: min(520px, 100%);
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      box-shadow: 12px 12px 0 var(--rose), var(--shadow);
+      padding: 24px;
+    }
+
+    .kicker {
+      display: inline-block;
+      padding: 6px 9px;
+      border: 1px solid var(--ink);
+      background: var(--yellow);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    .login h1 {
+      margin: 18px 0 10px;
+      font-family: var(--serif);
+      font-size: clamp(36px, 9vw, 72px);
+      line-height: .9;
+      letter-spacing: 0;
+    }
+
+    .login p {
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      margin: 16px 0 0;
+    }
+
+    .field label {
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .input {
+      width: 100%;
+      min-height: 46px;
+      border: 2px solid var(--ink);
+      background: #fffef7;
+      color: var(--ink);
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    .input:focus {
+      box-shadow: 0 0 0 4px rgba(8, 120, 94, .16);
+    }
+
+    .shell {
+      width: min(1280px, calc(100vw - 28px));
+      margin: 0 auto;
+      padding: 18px 0 46px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      padding: 12px 0 18px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .stamp {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--ink);
+      background: var(--green);
+      color: #fffef7;
+      font-family: var(--serif);
+      font-size: 28px;
+      box-shadow: 5px 5px 0 var(--rose);
+      flex: 0 0 auto;
+    }
+
+    .brand strong {
+      display: block;
+      font-family: var(--serif);
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .brand span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .headline {
+      min-height: 270px;
+      border: 2px solid var(--ink);
+      background:
+        linear-gradient(90deg, transparent 0 68%, rgba(8, 120, 94, .12) 68% 100%),
+        var(--paper);
+      box-shadow: var(--shadow);
+      padding: clamp(20px, 4vw, 34px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .headline::after {
+      content: "";
+      position: absolute;
+      right: 26px;
+      bottom: 24px;
+      width: 120px;
+      aspect-ratio: 1;
+      border: 2px solid var(--ink);
+      background:
+        linear-gradient(45deg, transparent 45%, var(--ink) 45% 55%, transparent 55%),
+        var(--yellow);
+      transform: rotate(8deg);
+    }
+
+    .headline h1 {
+      max-width: 720px;
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(44px, 8vw, 108px);
+      line-height: .86;
+      letter-spacing: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .headline p {
+      max-width: 650px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      line-height: 1.75;
+      position: relative;
+      z-index: 1;
+    }
+
+    .guide {
+      border: 2px solid var(--ink);
+      background: var(--mint);
+      box-shadow: 10px 10px 0 var(--yellow);
+      padding: 18px;
+    }
+
+    .guide h2 {
+      margin-bottom: 10px;
+      font-size: 17px;
+    }
+
+    .steps {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+      counter-reset: step;
+    }
+
+    .steps li {
+      counter-increment: step;
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 10px;
+      color: #245449;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .steps li::before {
+      content: counter(step);
+      display: grid;
+      place-items: center;
+      height: 28px;
+      border: 1px solid var(--ink);
+      background: var(--paper);
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 380px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+      margin-top: 22px;
+    }
+
+    .panel {
+      border: 2px solid var(--ink);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .side {
+      position: sticky;
+      top: 14px;
+      padding: 16px;
+    }
+
+    .block {
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .block:last-child {
+      padding-bottom: 0;
+      margin-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .drop {
+      min-height: 170px;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      border: 2px dashed var(--green);
+      background:
+        linear-gradient(135deg, rgba(255, 224, 138, .34) 25%, transparent 25%) 0 0 / 22px 22px,
+        var(--mint);
+      color: #0b604c;
+      text-align: center;
+      cursor: pointer;
+      line-height: 1.75;
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+
+    .drop:hover, .drop.drag {
+      transform: translateY(-2px);
+      box-shadow: 6px 6px 0 rgba(8, 120, 94, .22);
+    }
+
+    .drop input { display: none; }
+
+    .drop strong { font-size: 18px; }
+
+    .connect-card {
+      border: 2px solid var(--ink);
+      background: var(--mint);
+      padding: 14px;
+      box-shadow: 6px 6px 0 rgba(8, 120, 94, .2);
+    }
+
+    .primary-login {
+      width: 100%;
+      min-height: 54px;
+      font-size: 16px;
+      margin-top: 8px;
+    }
+
+    details.advanced {
+      margin-top: 12px;
+      border-top: 1px solid rgba(23, 19, 15, .22);
+      padding-top: 10px;
+    }
+
+    details.advanced summary {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--muted);
+    }
+
+    .hint {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      background: #f5ecd9;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      word-break: break-word;
+    }
+
+    .toast {
+      display: none;
+      margin-bottom: 12px;
+      padding: 10px 11px;
+      border: 1px solid var(--ink);
+      background: #fffef7;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .toast.show { display: block; }
+    .toast.ok { border-color: var(--green); color: var(--green); }
+    .toast.error { border-color: var(--red); color: var(--red); }
+
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn {
+      min-height: 40px;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: #fffef7;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-weight: 900;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 4px 4px 0 rgba(8, 120, 94, .25);
+    }
+
+    .btn.secondary {
+      background: #fffef7;
+      color: var(--ink);
+    }
+
+    .btn.blue {
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+
+    .btn.danger {
+      background: var(--red);
+      border-color: var(--red);
+    }
+
+    .btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 2px solid var(--ink);
+      background: var(--yellow);
+    }
+
+    .stat {
+      padding: 15px;
+      border-right: 1px solid var(--ink);
+    }
+
+    .stat:last-child { border-right: 0; }
+
+    .stat b {
+      display: block;
+      font-family: var(--serif);
+      font-size: 38px;
+      line-height: 1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 5px;
+      color: #5d4f3a;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .toolbar strong { font-size: 15px; }
+    .toolbar span { color: var(--muted); font-size: 12px; }
+
+    .list {
+      max-height: calc(100vh - 245px);
+      min-height: 420px;
+      overflow: auto;
+      background: #fffdf6;
+    }
+
+    .person {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #fffef9;
+    }
+
+    .person:hover { background: #fff7df; }
+    .person.done { opacity: .62; background: #eee2cf; }
+
+    .check {
+      width: 21px;
+      height: 21px;
+      accent-color: var(--green);
+    }
+
+    .name { min-width: 0; }
+
+    .name strong {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+    }
+
+    .name small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+    }
+
+    .link {
+      color: var(--green);
+      font-weight: 900;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+    }
+
+    .empty {
+      padding: 58px 24px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    code {
+      padding: 1px 4px;
+      border: 1px solid #dfd2bf;
+      background: #eee3d1;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: .92em;
+    }
+
+    @media (max-width: 980px) {
+      body.locked { overflow: auto; }
+      .hero, .app {
+        grid-template-columns: 1fr;
+      }
+      .side { position: static; }
+      .headline { min-height: 230px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .stat:nth-child(2) { border-right: 0; }
+      .stat:nth-child(-n + 2) { border-bottom: 1px solid var(--ink); }
+    }
+
+    @media (max-width: 620px) {
+      .shell { width: min(100vw - 18px, 1280px); }
+      .topbar { grid-template-columns: 1fr; }
+      .headline::after { opacity: .28; right: 10px; bottom: 10px; }
+      .stats { grid-template-columns: 1fr; }
+      .stat {
+        border-right: 0;
+        border-bottom: 1px solid var(--ink);
+      }
+      .stat:last-child { border-bottom: 0; }
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+      .person {
+        grid-template-columns: 30px minmax(0, 1fr);
+      }
+      .actions {
+        grid-column: 2;
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="login" class="login">
+    <form id="loginForm" class="login-card">
+      <span id="loginMode" class="kicker">初回セットアップ</span>
+      <h1>フォロバ整理室</h1>
+      <p id="loginCopy">この端末用の合言葉を作って、ツールを開く。Instagramのパスワードは入力しない。</p>
+      <div class="field">
+        <label for="passcode">合言葉</label>
+        <input id="passcode" class="input" type="password" autocomplete="current-password" minlength="4" placeholder="4文字以上" required />
+      </div>
+      <p id="loginError" class="hint"></p>
+      <div class="row">
+        <button id="loginButton" class="btn" type="submit">はじめる</button>
+        <button id="resetLogin" class="btn secondary" type="button">合言葉リセット</button>
+      </div>
+    </form>
+  </section>
+
+  <main class="shell">
+    <nav class="topbar">
+      <div class="brand">
+        <div class="stamp">F</div>
+        <div>
+          <strong>フォロバ整理室</strong>
+          <span>Instagramデータをローカルで比較</span>
+        </div>
+      </div>
+      <button id="logout" class="btn secondary" type="button">ログアウト</button>
+    </nav>
+
+    <section class="hero">
+      <div class="headline">
+        <h1>未フォロバを<br>一気に整理。</h1>
+        <p>followers と following のデータを読み込むだけ。未フォロバを抽出して、プロフィールを開いて、解除済みまで管理できる。</p>
+      </div>
+      <aside class="guide">
+        <h2>使うファイル</h2>
+        <ol class="steps">
+          <li>Instagramで個人データをJSON形式でダウンロード</li>
+          <li><code>followers_1.json</code> と <code>following.json</code> を取り込む</li>
+          <li>対象を選んで「選択を開く」</li>
+          <li>Instagramで手動解除して「解除済み」にする</li>
+        </ol>
+      </aside>
+    </section>
+
+    <section class="app">
+      <aside class="panel side">
+        <div id="toast" class="toast"></div>
+
+        <div class="block">
+          <span class="label">データ読み込み</span>
+          <label id="drop" class="drop">
+            <input id="fileInput" type="file" multiple accept=".json,.html,.txt" />
+            <span><strong>followers / following</strong><br>ここにドラッグ、またはクリック</span>
+          </label>
+          <p class="hint">このブラウザ内だけで処理する。外部送信はしない。</p>
+          <div id="filelog" class="status">まだ読み込んでない</div>
+        </div>
+
+        <div class="block">
+          <span class="label">Instagram API連携</span>
+          <div class="connect-card">
+            <strong>Instagram公式画面でログイン</strong>
+            <p class="hint">このサイトにInstagramのID・パスワードは入力しない。Instagram側のログイン画面だけを使う。</p>
+            <button id="instagramLogin" class="btn primary-login" type="button">Instagramでログイン</button>
+            <button id="exchangeCode" class="btn secondary primary-login" type="button" disabled>ログイン結果を反映</button>
+            <p id="oauthStatus" class="hint">まだ未連携。</p>
+          </div>
+          <details class="advanced">
+            <summary>開発者設定を開く</summary>
+            <div class="field">
+              <label for="igClientId">InstagramアプリID</label>
+              <input id="igClientId" class="input" type="text" autocomplete="off" placeholder="MetaアプリのInstagram App ID" />
+            </div>
+            <div class="field">
+              <label for="igRedirectUri">リダイレクトURL</label>
+              <input id="igRedirectUri" class="input" type="url" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label for="igScopes">権限スコープ</label>
+              <input id="igScopes" class="input" type="text" autocomplete="off" value="instagram_business_basic" />
+            </div>
+            <div class="field">
+              <label for="tokenExchangeEndpoint">トークン交換URL</label>
+              <input id="tokenExchangeEndpoint" class="input" type="url" autocomplete="off" placeholder="https://api.example.com/instagram/exchange-token" />
+            </div>
+            <div class="field">
+              <label for="apiToken">アクセストークン</label>
+              <input id="apiToken" class="input" type="password" autocomplete="off" placeholder="Bearer token / API key" />
+            </div>
+            <div class="field">
+              <label for="followingEndpoint">following取得URL</label>
+              <input id="followingEndpoint" class="input" type="url" placeholder="https://api.example.com/following" />
+            </div>
+            <div class="field">
+              <label for="followersEndpoint">followers取得URL</label>
+              <input id="followersEndpoint" class="input" type="url" placeholder="https://api.example.com/followers" />
+            </div>
+            <div class="row">
+              <button id="connectApi" class="btn blue" type="button">APIから取得</button>
+            </div>
+            <p class="hint">承認済みAPIが <code>username</code> / <code>value</code> / <code>string_list_data</code> を含む配列JSONを返す前提。CORSが無いAPIはブラウザから直接取得できない。</p>
+          </details>
+        </div>
+
+        <div class="block">
+          <span class="label">検索</span>
+          <input id="search" class="input" type="search" placeholder="ユーザー名で絞り込み" />
+        </div>
+
+        <div class="block">
+          <span class="label">操作</span>
+          <div class="row">
+            <button id="openSelected" class="btn" disabled>選択を開く</button>
+            <button id="markSelected" class="btn secondary" disabled>解除済みにする</button>
+            <button id="exportCsv" class="btn blue" disabled>CSV出力</button>
+          </div>
+          <p class="hint">一度に開くのは最大20件。</p>
+        </div>
+
+        <div class="block">
+          <span class="label">選択管理</span>
+          <div class="row">
+            <button id="selectAll" class="btn secondary" disabled>表示中を全選択</button>
+            <button id="clearSelected" class="btn secondary" disabled>選択解除</button>
+            <button id="clearDone" class="btn danger" disabled>解除済みリセット</button>
+          </div>
+        </div>
+      </aside>
+
+      <section class="panel">
+        <div class="stats">
+          <div class="stat"><b id="followingCount">0</b><span>フォロー中</span></div>
+          <div class="stat"><b id="followerCount">0</b><span>フォロワー</span></div>
+          <div class="stat"><b id="notBackCount">0</b><span>未フォロバ</span></div>
+          <div class="stat"><b id="doneCount">0</b><span>解除済み</span></div>
+        </div>
+        <div class="toolbar">
+          <strong id="resultTitle">結果</strong>
+          <span id="selectedCount">0件選択</span>
+        </div>
+        <div id="list" class="list">
+          <div class="empty">Instagramデータを入れると、ここに未フォロバ一覧が出る。</div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const LOGIN_KEY = "follow-room-pass-hash";
+    const AUTH_KEY = "follow-room-auth";
+    const DONE_KEY = "ig-follow-checker-done";
+
+    const state = {
+      followers: new Map(),
+      following: new Map(),
+      selected: new Set(),
+      done: new Set(JSON.parse(localStorage.getItem(DONE_KEY) || "[]")),
+      notBack: []
+    };
+
+    const els = {
+      login: document.getElementById("login"),
+      loginForm: document.getElementById("loginForm"),
+      loginMode: document.getElementById("loginMode"),
+      loginCopy: document.getElementById("loginCopy"),
+      passcode: document.getElementById("passcode"),
+      loginError: document.getElementById("loginError"),
+      loginButton: document.getElementById("loginButton"),
+      resetLogin: document.getElementById("resetLogin"),
+      logout: document.getElementById("logout"),
+      drop: document.getElementById("drop"),
+      fileInput: document.getElementById("fileInput"),
+      filelog: document.getElementById("filelog"),
+      igClientId: document.getElementById("igClientId"),
+      igRedirectUri: document.getElementById("igRedirectUri"),
+      igScopes: document.getElementById("igScopes"),
+      tokenExchangeEndpoint: document.getElementById("tokenExchangeEndpoint"),
+      instagramLogin: document.getElementById("instagramLogin"),
+      exchangeCode: document.getElementById("exchangeCode"),
+      oauthStatus: document.getElementById("oauthStatus"),
+      apiToken: document.getElementById("apiToken"),
+      followingEndpoint: document.getElementById("followingEndpoint"),
+      followersEndpoint: document.getElementById("followersEndpoint"),
+      connectApi: document.getElementById("connectApi"),
+      search: document.getElementById("search"),
+      list: document.getElementById("list"),
+      toast: document.getElementById("toast"),
+      followingCount: document.getElementById("followingCount"),
+      followerCount: document.getElementById("followerCount"),
+      notBackCount: document.getElementById("notBackCount"),
+      doneCount: document.getElementById("doneCount"),
+      resultTitle: document.getElementById("resultTitle"),
+      selectedCount: document.getElementById("selectedCount"),
+      openSelected: document.getElementById("openSelected"),
+      markSelected: document.getElementById("markSelected"),
+      exportCsv: document.getElementById("exportCsv"),
+      selectAll: document.getElementById("selectAll"),
+      clearSelected: document.getElementById("clearSelected"),
+      clearDone: document.getElementById("clearDone")
+    };
+
+    const normalize = value => String(value || "").trim().replace(/^@/, "").toLowerCase();
+    const profileUrl = username => `https://www.instagram.com/${encodeURIComponent(username)}/`;
+    const oauthParams = new URLSearchParams(window.location.search);
+    const oauthCode = oauthParams.get("code");
+    const oauthError = oauthParams.get("error") || oauthParams.get("error_reason");
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#039;"
+    }[char]));
+
+    async function hashText(value) {
+      const bytes = new TextEncoder().encode(value);
+      const hash = await crypto.subtle.digest("SHA-256", bytes);
+      return Array.from(new Uint8Array(hash)).map(byte => byte.toString(16).padStart(2, "0")).join("");
+    }
+
+    function refreshLoginView() {
+      const hasPass = Boolean(localStorage.getItem(LOGIN_KEY));
+      const authed = sessionStorage.getItem(AUTH_KEY) === "1";
+      document.body.classList.toggle("locked", !authed);
+      els.login.classList.toggle("hide", authed);
+      els.loginMode.textContent = hasPass ? "ログイン" : "初回セットアップ";
+      els.loginCopy.textContent = hasPass
+        ? "この端末で設定した合言葉を入力して開く。"
+        : "この端末用の合言葉を作って、ツールを開く。Instagramのパスワードは入力しない。";
+      els.loginButton.textContent = hasPass ? "ログイン" : "合言葉を作る";
+      els.resetLogin.style.display = hasPass ? "inline-block" : "none";
+      if (!authed) setTimeout(() => els.passcode.focus(), 50);
+    }
+
+    els.loginForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const pass = els.passcode.value.trim();
+      if (pass.length < 4) {
+        els.loginError.textContent = "合言葉は4文字以上にして。";
+        return;
+      }
+
+      const stored = localStorage.getItem(LOGIN_KEY);
+      const current = await hashText(pass);
+      if (!stored) {
+        localStorage.setItem(LOGIN_KEY, current);
+        sessionStorage.setItem(AUTH_KEY, "1");
+      } else if (stored === current) {
+        sessionStorage.setItem(AUTH_KEY, "1");
+      } else {
+        els.loginError.textContent = "合言葉が違う。";
+        return;
+      }
+
+      els.passcode.value = "";
+      els.loginError.textContent = "";
+      refreshLoginView();
+    });
+
+    els.resetLogin.addEventListener("click", () => {
+      localStorage.removeItem(LOGIN_KEY);
+      sessionStorage.removeItem(AUTH_KEY);
+      els.passcode.value = "";
+      els.loginError.textContent = "リセットした。新しい合言葉を作って。";
+      refreshLoginView();
+    });
+
+    els.logout.addEventListener("click", () => {
+      sessionStorage.removeItem(AUTH_KEY);
+      refreshLoginView();
+    });
+
+    function showToast(message, type = "") {
+      els.toast.textContent = message;
+      els.toast.className = `toast show ${type}`;
+    }
+
+    function setupInstagramOAuth() {
+      els.igRedirectUri.value = window.location.origin + window.location.pathname;
+
+      if (oauthCode) {
+        els.oauthStatus.textContent = `認可コード取得済み。コード: ${oauthCode.slice(0, 12)}...`;
+        els.exchangeCode.disabled = false;
+      } else if (oauthError) {
+        els.oauthStatus.textContent = `Instagramログイン失敗: ${oauthError}`;
+      }
+    }
+
+    function startInstagramLogin() {
+      const clientId = els.igClientId.value.trim();
+      const redirectUri = els.igRedirectUri.value.trim();
+      const scopes = els.igScopes.value.trim();
+
+      if (!clientId || !redirectUri || !scopes) {
+        showToast("まだInstagramログイン設定がない。開発者設定にアプリIDを入れて。", "error");
+        return;
+      }
+
+      const params = new URLSearchParams({
+        enable_fb_login: "0",
+        force_authentication: "1",
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: "code",
+        scope: scopes
+      });
+      window.location.href = `https://www.instagram.com/oauth/authorize?${params.toString()}`;
+    }
+
+    async function exchangeInstagramCode() {
+      const endpoint = els.tokenExchangeEndpoint.value.trim();
+      const redirectUri = els.igRedirectUri.value.trim();
+
+      if (!oauthCode) {
+        showToast("認可コードがない。先にInstagramでログインして。", "error");
+        return;
+      }
+
+      if (!endpoint) {
+        els.oauthStatus.textContent = `認可コード: ${oauthCode}`;
+        showToast("トークン交換URLが未設定。サーバー側でこの認可コードをアクセストークンに交換して。", "error");
+        return;
+      }
+
+      els.exchangeCode.disabled = true;
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({ code: oauthCode, redirect_uri: redirectUri })
+        });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        const data = await response.json();
+        const token = data.access_token || data.token;
+        if (!token) throw new Error("access_token が返ってこなかった");
+        els.apiToken.value = token;
+        showToast("Instagramログイン完了。トークンをセットした。", "ok");
+        els.oauthStatus.textContent = "ログイン済み。followers/following取得URLを入れてAPIから取得できる。";
+      } catch (error) {
+        showToast(`トークン交換失敗: ${error.message}`, "error");
+        els.exchangeCode.disabled = false;
+      }
+    }
+
+    function pickEntriesFromJson(data, filename) {
+      const lower = filename.toLowerCase();
+      if (Array.isArray(data)) return data;
+      if (data.relationships_following) return data.relationships_following;
+      if (data.relationships_followers) return data.relationships_followers;
+      if (lower.includes("following") && data.following) return data.following;
+      if (lower.includes("followers") && data.followers) return data.followers;
+      return [];
+    }
+
+    function extractUsersFromJson(data, filename) {
+      const entries = pickEntriesFromJson(data, filename);
+      return entries.map(item => {
+        const first = item.string_list_data && item.string_list_data[0];
+        const username = first && first.value;
+        if (!username) return null;
+        return {
+          username: normalize(username),
+          display: username,
+          href: first.href || profileUrl(username)
+        };
+      }).filter(Boolean);
+    }
+
+    function extractUsersFromHtml(text) {
+      const doc = new DOMParser().parseFromString(text, "text/html");
+      return Array.from(doc.querySelectorAll("a[href*='instagram.com/']")).map(anchor => {
+        const match = anchor.href.match(/instagram\.com\/([^/?#]+)/i);
+        const username = match && match[1];
+        if (!username) return null;
+        return {
+          username: normalize(username),
+          display: username,
+          href: profileUrl(username)
+        };
+      }).filter(Boolean);
+    }
+
+    function addUsers(target, users) {
+      users.forEach(user => {
+        if (user.username && !target.has(user.username)) target.set(user.username, user);
+      });
+    }
+
+    function extractUsersFromApiPayload(payload) {
+      const list = Array.isArray(payload)
+        ? payload
+        : payload.data || payload.users || payload.followers || payload.following || [];
+
+      return list.map(item => {
+        const first = item.string_list_data && item.string_list_data[0];
+        const raw = item.username || item.user_name || item.handle || item.value || (first && first.value);
+        if (!raw) return null;
+        return {
+          username: normalize(raw),
+          display: String(raw).replace(/^@/, ""),
+          href: item.href || item.profile_url || (first && first.href) || profileUrl(raw)
+        };
+      }).filter(Boolean);
+    }
+
+    async function fetchApiUsers(url, token) {
+      const headers = { "Accept": "application/json" };
+      if (token) headers.Authorization = token.toLowerCase().startsWith("bearer ") ? token : `Bearer ${token}`;
+      const response = await fetch(url, { headers });
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+      return extractUsersFromApiPayload(await response.json());
+    }
+
+    async function importFromApi() {
+      const token = els.apiToken.value.trim();
+      const followingUrl = els.followingEndpoint.value.trim();
+      const followersUrl = els.followersEndpoint.value.trim();
+
+      if (!followingUrl || !followersUrl) {
+        showToast("following取得URL と followers取得URL を両方入れて。", "error");
+        return;
+      }
+
+      els.connectApi.disabled = true;
+      showToast("APIから取得中。少し待って。");
+      try {
+        const [followingUsers, followerUsers] = await Promise.all([
+          fetchApiUsers(followingUrl, token),
+          fetchApiUsers(followersUrl, token)
+        ]);
+        state.following.clear();
+        state.followers.clear();
+        addUsers(state.following, followingUsers);
+        addUsers(state.followers, followerUsers);
+        state.selected.clear();
+        calculate();
+        els.filelog.textContent = `API連携: フォロー中 ${followingUsers.length}件 / フォロワー ${followerUsers.length}件`;
+        showToast(`API取得完了。未フォロバ ${state.notBack.length}件。`, "ok");
+      } catch (error) {
+        showToast(`API取得失敗: ${error.message}。CORSやトークンを確認して。`, "error");
+      } finally {
+        els.connectApi.disabled = false;
+      }
+    }
+
+    async function readFiles(files) {
+      const picked = Array.from(files || []);
+      if (!picked.length) return;
+
+      const logs = [];
+      let failed = 0;
+
+      for (const file of picked) {
+        const lower = file.name.toLowerCase();
+        let users = [];
+
+        try {
+          const text = await file.text();
+          users = lower.endsWith(".json")
+            ? extractUsersFromJson(JSON.parse(text), file.name)
+            : extractUsersFromHtml(text);
+        } catch (error) {
+          failed += 1;
+          logs.push(`${file.name}: 読み込み失敗`);
+          continue;
+        }
+
+        if (lower.includes("following")) {
+          addUsers(state.following, users);
+          logs.push(`${file.name}: フォロー中 ${users.length}件`);
+        } else if (lower.includes("follower")) {
+          addUsers(state.followers, users);
+          logs.push(`${file.name}: フォロワー ${users.length}件`);
+        } else {
+          logs.push(`${file.name}: followers / following 判定不可`);
+        }
+      }
+
+      state.selected.clear();
+      calculate();
+      els.filelog.textContent = logs.join(" / ") || "読み込めるファイルがなかった";
+
+      if (failed) showToast(`${failed}件読み込めなかった。JSONかHTMLか確認して。`, "error");
+      else if (!state.followers.size || !state.following.size) showToast("followers と following の両方を読み込むと比較できる。", "error");
+      else showToast(`読み込み完了。未フォロバ ${state.notBack.length}件。`, "ok");
+    }
+
+    function calculate() {
+      state.notBack = Array.from(state.following.values())
+        .filter(user => !state.followers.has(user.username))
+        .sort((a, b) => a.username.localeCompare(b.username));
+      render();
+    }
+
+    function visibleUsers() {
+      const q = normalize(els.search.value);
+      return state.notBack.filter(user => !q || user.username.includes(q));
+    }
+
+    function render() {
+      const users = visibleUsers();
+      const doneInList = state.notBack.filter(user => state.done.has(user.username)).length;
+
+      els.followingCount.textContent = state.following.size;
+      els.followerCount.textContent = state.followers.size;
+      els.notBackCount.textContent = state.notBack.length;
+      els.doneCount.textContent = doneInList;
+      els.resultTitle.textContent = `結果 ${users.length}件`;
+      els.selectedCount.textContent = `${state.selected.size}件選択`;
+
+      const hasResults = state.notBack.length > 0;
+      els.openSelected.disabled = state.selected.size === 0;
+      els.markSelected.disabled = state.selected.size === 0;
+      els.exportCsv.disabled = !hasResults;
+      els.selectAll.disabled = users.length === 0;
+      els.clearSelected.disabled = state.selected.size === 0;
+      els.clearDone.disabled = state.done.size === 0;
+
+      if (!state.following.size && !state.followers.size) {
+        els.list.innerHTML = '<div class="empty">Instagramデータを入れると、ここに未フォロバ一覧が出る。</div>';
+        return;
+      }
+
+      if (!state.following.size || !state.followers.size) {
+        els.list.innerHTML = '<div class="empty">比較には <code>followers</code> と <code>following</code> の両方が必要。</div>';
+        return;
+      }
+
+      if (!users.length) {
+        els.list.innerHTML = '<div class="empty">該当なし。検索条件を変えてみて。</div>';
+        return;
+      }
+
+      els.list.innerHTML = users.map(user => {
+        const checked = state.selected.has(user.username) ? "checked" : "";
+        const done = state.done.has(user.username);
+        const safeUser = escapeHtml(user.username);
+        const safeDisplay = escapeHtml(user.display);
+        return `
+          <article class="person ${done ? "done" : ""}" data-user="${safeUser}">
+            <input class="check" type="checkbox" ${checked} aria-label="${safeUser}を選択">
+            <div class="name">
+              <strong>@${safeDisplay}</strong>
+              <small>${done ? "解除済み" : "未対応"}</small>
+            </div>
+            <div class="actions">
+              <a class="link" href="${profileUrl(user.username)}" target="_blank" rel="noreferrer">開く</a>
+              <button class="btn secondary" type="button" data-action="done">${done ? "戻す" : "解除済み"}</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function saveDone() {
+      localStorage.setItem(DONE_KEY, JSON.stringify(Array.from(state.done)));
+    }
+
+    function exportCsv() {
+      const rows = [["username", "profile_url", "status"]];
+      state.notBack.forEach(user => rows.push([
+        user.username,
+        profileUrl(user.username),
+        state.done.has(user.username) ? "done" : "pending"
+      ]));
+      const csv = rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "instagram-not-following-back.csv";
+      anchor.click();
+      URL.revokeObjectURL(url);
+    }
+
+    els.fileInput.addEventListener("change", event => readFiles(event.target.files));
+    els.instagramLogin.addEventListener("click", startInstagramLogin);
+    els.exchangeCode.addEventListener("click", exchangeInstagramCode);
+    els.connectApi.addEventListener("click", importFromApi);
+    els.search.addEventListener("input", render);
+
+    els.drop.addEventListener("dragover", event => {
+      event.preventDefault();
+      els.drop.classList.add("drag");
+    });
+    els.drop.addEventListener("dragleave", () => els.drop.classList.remove("drag"));
+    els.drop.addEventListener("drop", event => {
+      event.preventDefault();
+      els.drop.classList.remove("drag");
+      readFiles(event.dataTransfer.files);
+    });
+
+    els.list.addEventListener("change", event => {
+      if (!event.target.classList.contains("check")) return;
+      const username = event.target.closest(".person").dataset.user;
+      if (event.target.checked) state.selected.add(username);
+      else state.selected.delete(username);
+      render();
+    });
+
+    els.list.addEventListener("click", event => {
+      const button = event.target.closest("button[data-action='done']");
+      if (!button) return;
+      const username = button.closest(".person").dataset.user;
+      if (state.done.has(username)) state.done.delete(username);
+      else state.done.add(username);
+      saveDone();
+      render();
+    });
+
+    els.openSelected.addEventListener("click", () => {
+      const targets = Array.from(state.selected).slice(0, 20);
+      targets.forEach(username => window.open(profileUrl(username), "_blank", "noreferrer"));
+      showToast(`${targets.length}件開いた。Instagram側で手動解除してね。`, "ok");
+    });
+
+    els.markSelected.addEventListener("click", () => {
+      state.selected.forEach(username => state.done.add(username));
+      state.selected.clear();
+      saveDone();
+      render();
+      showToast("選択したアカウントを解除済みにした。", "ok");
+    });
+
+    els.exportCsv.addEventListener("click", exportCsv);
+
+    els.selectAll.addEventListener("click", () => {
+      visibleUsers().forEach(user => state.selected.add(user.username));
+      render();
+    });
+
+    els.clearSelected.addEventListener("click", () => {
+      state.selected.clear();
+      render();
+    });
+
+    els.clearDone.addEventListener("click", () => {
+      state.done.clear();
+      saveDone();
+      render();
+      showToast("解除済みをリセットした。", "ok");
+    });
+
+    refreshLoginView();
+    setupInstagramOAuth();
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    }
+  </script>
+</body>
+</html>
