@@ -1,4 +1,4 @@
-const CACHE_NAME = "follow-room-v2";
+const CACHE_NAME = "follow-room-v3";
 const ASSETS = [
   "./",
   "./index.html",

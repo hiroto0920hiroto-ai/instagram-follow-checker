@@ -9,6 +9,7 @@
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon.svg" />
+  <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
   <title>フォロバ確認</title>
   <style>
     :root {
@@ -402,7 +403,7 @@
         <div class="block">
           <span class="label">ファイルを入れる</span>
           <label id="drop" class="drop">
-            <input id="fileInput" type="file" multiple accept=".json,.html,.txt" />
+            <input id="fileInput" type="file" multiple accept=".zip,.json,.html,.txt" />
             <span>ここを押して<br><code>followers</code> と <code>following</code> を選ぶ</span>
           </label>
           <p class="hint">ファイルは外に送らない。このスマホの中だけで処理する。</p>
@@ -542,6 +543,42 @@
       });
     }
 
+    function classifyAndAdd(name, users, logs) {
+      const lower = name.toLowerCase();
+      if (lower.includes("following")) {
+        addUsers(state.following, users);
+        logs.push(`${name}: フォロー中 ${users.length}件`);
+      } else if (lower.includes("follower")) {
+        addUsers(state.followers, users);
+        logs.push(`${name}: フォロワー ${users.length}件`);
+      } else {
+        logs.push(`${name}: followers / following か判定できない`);
+      }
+    }
+
+    async function readZip(file, logs) {
+      if (!window.fflate) throw new Error("ZIP読み込み準備中。少し待ってもう一回押して");
+
+      const entries = fflate.unzipSync(new Uint8Array(await file.arrayBuffer()));
+      let found = 0;
+
+      for (const [name, data] of Object.entries(entries)) {
+        const lower = name.toLowerCase();
+        const useful = lower.includes("following") || lower.includes("follower");
+        const supported = lower.endsWith(".json") || lower.endsWith(".html") || lower.endsWith(".txt");
+        if (!useful || !supported) continue;
+
+        const text = new TextDecoder("utf-8").decode(data);
+        const users = lower.endsWith(".json")
+          ? extractUsersFromJson(JSON.parse(text), name)
+          : extractUsersFromHtml(text);
+        classifyAndAdd(name, users, logs);
+        found += 1;
+      }
+
+      if (!found) logs.push(`${file.name}: ZIP内に followers / following が見つからない`);
+    }
+
     async function readFiles(files) {
       const picked = Array.from(files || []);
       if (!picked.length) return;
@@ -554,32 +591,29 @@
         let users = [];
 
         try {
-          const text = await file.text();
-          users = lower.endsWith(".json")
-            ? extractUsersFromJson(JSON.parse(text), file.name)
-            : extractUsersFromHtml(text);
+          if (lower.endsWith(".zip")) {
+            await readZip(file, logs);
+            continue;
+          } else {
+            const text = await file.text();
+            users = lower.endsWith(".json")
+              ? extractUsersFromJson(JSON.parse(text), file.name)
+              : extractUsersFromHtml(text);
+          }
         } catch (error) {
           failed += 1;
-          logs.push(`${file.name}: 読み込み失敗`);
+          logs.push(`${file.name}: 読み込み失敗（${error.message}）`);
           continue;
         }
 
-        if (lower.includes("following")) {
-          addUsers(state.following, users);
-          logs.push(`${file.name}: フォロー中 ${users.length}件`);
-        } else if (lower.includes("follower")) {
-          addUsers(state.followers, users);
-          logs.push(`${file.name}: フォロワー ${users.length}件`);
-        } else {
-          logs.push(`${file.name}: followers / following か判定できない`);
-        }
+        classifyAndAdd(file.name, users, logs);
       }
 
       state.selected.clear();
       calculate();
       els.filelog.textContent = logs.join(" / ") || "読み込めるファイルがなかった";
 
-      if (failed) showToast(`${failed}件読み込めなかった。JSONかHTMLか確認して。`, "error");
+      if (failed) showToast(`${failed}件読み込めなかった。ZIPを解凍してJSONを直接入れてもOK。`, "error");
       else if (!state.followers.size || !state.following.size) showToast("followers と following の両方を入れて。", "error");
       else showToast(`完了。未フォロバ ${state.notBack.length}件。`, "ok");
     }
