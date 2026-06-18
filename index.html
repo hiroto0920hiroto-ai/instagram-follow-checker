@@ -543,16 +543,27 @@
       });
     }
 
+    function basename(path) {
+      return path.split("/").pop().split("\\").pop().toLowerCase();
+    }
+
+    function detectRelationFile(name) {
+      const base = basename(name);
+      if (/^following\.(json|html|txt)$/.test(base)) return "following";
+      if (/^followers(_\d+)?\.(json|html|txt)$/.test(base)) return "followers";
+      return "";
+    }
+
     function classifyAndAdd(name, users, logs) {
-      const lower = name.toLowerCase();
-      if (lower.includes("following")) {
+      const kind = detectRelationFile(name);
+      if (kind === "following") {
         addUsers(state.following, users);
         logs.push(`${name}: フォロー中 ${users.length}件`);
-      } else if (lower.includes("follower")) {
+      } else if (kind === "followers") {
         addUsers(state.followers, users);
         logs.push(`${name}: フォロワー ${users.length}件`);
       } else {
-        logs.push(`${name}: followers / following か判定できない`);
+        logs.push(`${name}: 対象外`);
       }
     }
 
@@ -564,7 +575,7 @@
 
       for (const [name, data] of Object.entries(entries)) {
         const lower = name.toLowerCase();
-        const useful = lower.includes("following") || lower.includes("follower");
+        const useful = Boolean(detectRelationFile(name));
         const supported = lower.endsWith(".json") || lower.endsWith(".html") || lower.endsWith(".txt");
         if (!useful || !supported) continue;
 
