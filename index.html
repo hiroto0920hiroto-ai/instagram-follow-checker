@@ -549,8 +549,8 @@
 
     function detectRelationFile(name) {
       const base = basename(name);
-      if (/^following\.(json|html|txt)$/.test(base)) return "following";
-      if (/^followers(_\d+)?\.(json|html|txt)$/.test(base)) return "followers";
+      if (/^following([_.-].*)?\.(json|html|txt)$/.test(base)) return "following";
+      if (/^followers([_.-].*)?\.(json|html|txt)$/.test(base)) return "followers";
       return "";
     }
 
@@ -572,9 +572,11 @@
 
       const entries = fflate.unzipSync(new Uint8Array(await file.arrayBuffer()));
       let found = 0;
+      let scanned = 0;
 
       for (const [name, data] of Object.entries(entries)) {
         const lower = name.toLowerCase();
+        scanned += 1;
         const useful = Boolean(detectRelationFile(name));
         const supported = lower.endsWith(".json") || lower.endsWith(".html") || lower.endsWith(".txt");
         if (!useful || !supported) continue;
@@ -587,7 +589,7 @@
         found += 1;
       }
 
-      if (!found) logs.push(`${file.name}: ZIP内に followers / following が見つからない`);
+      if (!found) logs.push(`${file.name}: ZIP内${scanned}個を見たけど followers / following が見つからない`);
     }
 
     async function readFiles(files) {
